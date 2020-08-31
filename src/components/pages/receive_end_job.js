@@ -1,7 +1,5 @@
 import React, { useState, useEffect, forwardRef } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
 import { makeStyles } from '@material-ui/core/styles';
-import * as orderLineActions from '../../actions/line.action';
 import { Typography, Grid } from '@material-ui/core';
 import MaterialTable, { MTableToolbar } from 'material-table';
 import DeleteOutline from '@material-ui/icons/DeleteOutline';
@@ -30,10 +28,19 @@ import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { green } from '@material-ui/core/colors';
-
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-
+import axios from 'axios';
 import { API_URL } from '../../Constants';
+
+import Modal from '@material-ui/core/Modal';
+import Backdrop from '@material-ui/core/Backdrop';
+import Fade from '@material-ui/core/Fade';
+import Divider from '@material-ui/core/Divider';
+import Card from '@material-ui/core/Card';
+import CardActionArea from '@material-ui/core/CardActionArea';
+import CardHeader from '@material-ui/core/CardHeader';
+import CardActions from '@material-ui/core/CardActions';
+import CardContent from '@material-ui/core/CardContent';
+import CardMedia from '@material-ui/core/CardMedia';
 
 const tableIcons = {
 	Add: forwardRef((props, ref) => <AddBox {...props} ref={ref} />),
@@ -63,7 +70,7 @@ const useStyles = makeStyles((theme) => ({
 		paddingTop: '3%',
 		paddingLeft: '5%',
 		paddingRight: '5%',
-		paddingBottom: '7%'
+		paddingBottom: '7%',
 	},
 	txt: {
 		fontFamily: 'kanit',
@@ -73,6 +80,19 @@ const useStyles = makeStyles((theme) => ({
 	},
 	margin: {
 		margin: theme.spacing(1),
+	},
+	modal: {
+		justifyContent: 'center',
+		display: 'flex',
+		flexDirection: 'column',
+		margin: 'auto',
+		width: 'fit-content',
+	},
+	paper: {
+		backgroundColor: theme.palette.background.paper,
+		//border: '2px solid #000',
+		boxShadow: theme.shadows[5],
+		padding: '3%',
 	},
 }));
 
@@ -84,57 +104,70 @@ function Line() {
 	const [data, setData] = useState([]);
 
 	useEffect(() => {
-		axios
-			.get(API_URL + '/data')
-			.then((response) => {
-				setData(response.data);
-			})
-			.catch((error) => {
-				console.log(error);
-			});
+		API('data');
 	}, []);
 
+	const API = (path) => {
+		setData({ showLoading: true });
+		if (path == 'data') {
+			axios
+				.get(API_URL + '/' + path)
+				.then((response) => {
+					setData({ LoadData: response.data, showLoading: false });
+				})
+				.catch((error) => {
+					console.log(error);
+				});
+		} else if (path == 'edit') {
+			const parm = {
+				RecId: rowData.RecId,
+				ActStartDate: rowData.ActStartDate,
+				ActEndDate: rowData.ActEndDate,
+				Delay: rowData.Delay,
+				DelayPlan: rowData.DelayPlan,
+				OperName: rowData.OperName,
+				OperNo: rowData.OperNo,
+				PlanDays: rowData.PlanDays,
+				PlanStartDate: rowData.PlanStartDate,
+				PlanEndDate: rowData.PlanEndDate,
+				Remark: rowData.Remark,
+				SideDesign: rowData.SideDesign,
+				StmTrackId: rowData.StmTrackId,
+				TypeDesign: rowData.TypeDesign,
+				UserId: rowData.UserId,
+				UserName: rowData.UserName,
+			};
+
+			axios.post(API_URL + '/' + path, parm).then(() => {
+				refreshPage();
+			});
+		}
+	};
+
+	function formatDate(string) {
+		var options = { year: 'numeric', month: 'short', day: 'numeric' };
+		return new Date(string).toLocaleDateString('th-TH', options);
+	}
+
 	function refreshPage() {
-		window.location.reload(false);
+		API('data');
 	}
 
 	const handleClickOpen = (rowData, name) => {
 		let today = new Date();
 		const currdate = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate() + 'T00:00:00';
 		setOpen(true);
-		if (name == 'Receive') {
+		if (name == 'รับ') {
 			setRowData({ ...rowData, Action: name, ActStartDate: currdate });
 		}
-		if (name == 'End') {
+		if (name == 'เสร็จ') {
 			setRowData({ ...rowData, Action: name, ActEndDate: currdate });
 		}
 	};
 
 	const handleOK = () => {
 		setOpen(false);
-		const parm = {
-			RecId: rowData.RecId,
-			ActStartDate: rowData.ActStartDate,
-			ActEndDate: rowData.ActEndDate,
-			Delay: rowData.Delay,
-			DelayPlan: rowData.DelayPlan,
-			OperName: rowData.OperName,
-			OperNo: rowData.OperNo,
-			PlanDays: rowData.PlanDays,
-			PlanStartDate: rowData.PlanStartDate,
-			PlanEndDate: rowData.PlanEndDate,
-			Remark: rowData.Remark,
-			SideDesign: rowData.SideDesign,
-			StmTrackId: rowData.StmTrackId,
-			TypeDesign: rowData.TypeDesign,
-			UserId: rowData.UserId,
-			UserName: rowData.UserName,
-		};
-
-		axios.post(API_URL + `/edit`, parm).then((res) => {
-			refreshPage();
-			console.log(rowData.Action + ' job done!!');
-		});
+		API('edit');
 	};
 
 	const handleClose = () => {
@@ -143,50 +176,208 @@ function Line() {
 
 	const showDialog = () => {
 		return (
-			<Dialog
+			<Modal
+				// aria-labelledby="transition-modal-title"
+				// aria-describedby="transition-modal-description"
+				className={classes.modal}
 				open={open}
 				onClose={handleClose}
-				aria-labelledby="alert-dialog-title"
-				aria-describedby="alert-dialog-description"
+				closeAfterTransition
+				BackdropComponent={Backdrop}
+				BackdropProps={{
+					timeout: 500,
+				}}
 			>
-				<DialogTitle id="alert-dialog-title">{rowData.Action + ' job'}</DialogTitle>
-				<DialogContent>
-					<DialogContentText id="alert-dialog-description">
-						{'Are you sure you want to ' + rowData.Action + ' this job?'}
-					</DialogContentText>
-					<Formik
-						initialValues={{
-							id: 0,
-						}}
-						onSubmit={(values, { setSubmitting }) => {
-							setSubmitting(false);
-						}}
-					>
-						{(props) => {
-							const { handleSubmit, isSubmitting } = props;
+				<Fade in={open}>
+					<Card className={classes.paper}>
+						<CardHeader title={'ยืนยัน' + rowData.Action + 'งาน'} subheader={formatDate(Date())} />
+						<CardContent>
+							<Grid container justify="space-around">
+								<Grid item md={7} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightRegular" fontSize={16}>
+											{rowData.UserName + ' (' + rowData.UserId + ')'}
+										</Box>
+									</Typography>
+								</Grid>
+								<Grid item md={5} xs={12}>
+									<Typography className={classes.txt}>
+										<Box fontWeight="fontWeightLight" fontSize={14} textAlign="right">
+											{rowData.PlanStartDate != '1900-01-01T00:00:00' ? (
+												formatDate(rowData.PlanStartDate)
+											) : (
+												<Box fontWeight="fontWeightLight"> </Box>
+											)}
+											{' - '}
+											{rowData.PlanEndDate != '1900-01-01T00:00:00' ? (
+												formatDate(rowData.PlanEndDate)
+											) : (
+												<Box fontWeight="fontWeightLight"> </Box>
+											)}
+										</Box>
+									</Typography>
+								</Grid>
+							</Grid>
+							<br></br>
+							<Grid container justify="space-around">
+								<Grid item md={12} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightRegular">
+											{'Project : '}
+											<Box fontWeight="fontWeightLight" fontSize={18}>
+												{rowData.ProjName}
+											</Box>
+										</Box>
+									</Typography>
+								</Grid>
+							</Grid>
+							<br></br>
+							<Grid container justify="space-around">
+								<Grid item md={3} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightLight" fontSize={16}>
+											{'Type design : '}
+										</Box>
+									</Typography>
+								</Grid>
+								<Grid item md={9} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightLight" fontSize={16}>
+											<Box fontWeight="fontWeightRegular">{rowData.TypeDesign} </Box>
+										</Box>
+									</Typography>
+								</Grid>
+							</Grid>
+							<Grid container justify="space-around">
+								<Grid item md={3} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightLight" fontSize={16}>
+											{'Side design : '}
+										</Box>
+									</Typography>
+								</Grid>
+								<Grid item md={9} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightRegular" fontSize={16}>
+											{rowData.SideDesign}
+										</Box>
+									</Typography>
+								</Grid>
+							</Grid>
+							<Grid container justify="space-around">
+								<Grid item md={3} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightLight" fontSize={16}>
+											{'Operation : '}
+										</Box>
+									</Typography>
+								</Grid>
+								<Grid item md={9} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightRegular" fontSize={16}>
+											{'(' + rowData.OperNo + ') ' + rowData.OperName}
+										</Box>
+									</Typography>
+								</Grid>
+							</Grid>
+							<Grid container justify="space-around">
+								<Grid item md={3} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightLight" fontSize={16}>
+											{'Remark : '}
+										</Box>
+									</Typography>
+								</Grid>
+								<Grid item md={9} xs={12}>
+									<Typography variant="body2" color="textPrimary" component="p">
+										<Box fontWeight="fontWeightRegular" fontSize={16}>
+											{rowData.Remark}
+										</Box>
+									</Typography>
+								</Grid>
+							</Grid>
+						</CardContent>
+						<Divider className={classes.divider} />
+						<CardActions style={{ width: '100%', justifyContent: 'flex-end' }}>
+							<Formik
+								initialValues={{
+									id: 0,
+								}}
+								onSubmit={(values, { setSubmitting }) => {
+									setSubmitting(false);
+								}}
+							>
+								{(props) => {
+									const { handleSubmit, isSubmitting } = props;
 
-							return (
-								<Form onSubmit={handleSubmit}>
-									<DialogActions>
-										<Button
-											disabled={isSubmitting}
-											onClick={handleOK}
-											type="submit"
-											color="primary"
-											variant="contained"
-										>
-											OK
-										</Button>
-										<Button onClick={handleClose} color="primary" autoFocus>
-											Cancel
-										</Button>
-									</DialogActions>
-								</Form>
-							);
-						}}
-					</Formik>
-				</DialogContent>
-			</Dialog>
+									return (
+										<Form onSubmit={handleSubmit}>
+											<DialogActions>
+												<Button
+													disabled={isSubmitting}
+													onClick={handleOK}
+													type="submit"
+													color="primary"
+													variant="contained"
+												>
+													OK
+												</Button>
+												<Button onClick={handleClose} color="primary" autoFocus>
+													Cancel
+												</Button>
+											</DialogActions>
+										</Form>
+									);
+								}}
+							</Formik>
+						</CardActions>
+					</Card>
+				</Fade>
+			</Modal>
+			// <Dialog
+			// 	open={open}
+			// 	onClose={handleClose}
+			// 	aria-labelledby="alert-dialog-title"
+			// 	aria-describedby="alert-dialog-description"
+			// >
+			// 	<DialogTitle id="alert-dialog-title">{rowData.Action + ' job'}</DialogTitle>
+			// 	<DialogContent>
+			// 		<DialogContentText id="alert-dialog-description">
+			// 			{'Are you sure you want to ' + rowData.Action + ' this job?'}
+			// 		</DialogContentText>
+			// 		<Formik
+			// 			initialValues={{
+			// 				id: 0,
+			// 			}}
+			// 			onSubmit={(values, { setSubmitting }) => {
+			// 				setSubmitting(false);
+			// 			}}
+			// 		>
+			// 			{(props) => {
+			// 				const { handleSubmit, isSubmitting } = props;
+
+			// 				return (
+			// 					<Form onSubmit={handleSubmit}>
+			// 						<DialogActions>
+			// 							<Button
+			// 								disabled={isSubmitting}
+			// 								onClick={handleOK}
+			// 								type="submit"
+			// 								color="primary"
+			// 								variant="contained"
+			// 							>
+			// 								OK
+			// 							</Button>
+			// 							<Button onClick={handleClose} color="primary" autoFocus>
+			// 								Cancel
+			// 							</Button>
+			// 						</DialogActions>
+			// 					</Form>
+			// 				);
+			// 			}}
+			// 		</Formik>
+			// 	</DialogContent>
+			// </Dialog>
 		);
 	};
 
@@ -201,7 +392,7 @@ function Line() {
 			tooltip: 'รับงาน',
 			hidden: rowData.ActStartDate.toString() == '1900-01-01T00:00:00' ? false : true,
 			onClick: (event, rowData) => {
-				handleClickOpen(rowData, 'Receive');
+				handleClickOpen(rowData, 'รับ');
 			},
 		}),
 		(rowData) => ({
@@ -219,7 +410,7 @@ function Line() {
 						: true
 					: true,
 			onClick: (event, rowData) => {
-				handleClickOpen(rowData, 'End');
+				handleClickOpen(rowData, 'เสร็จ');
 			},
 		}),
 		(rowData) => ({
@@ -252,7 +443,7 @@ function Line() {
 				</div>
 			),
 		},
-		
+
 		{
 			title: 'User',
 			field: 'UserId',
@@ -268,7 +459,7 @@ function Line() {
 				</div>
 			),
 		},
-		
+
 		{
 			title: 'Type Design',
 			field: 'TypeDesign',
@@ -297,23 +488,25 @@ function Line() {
 				<Typography className={classes.txt}>
 					<Box fontWeight="fontWeightLight">
 						{item.PlanStartDate.toString() != '1900-01-01T00:00:00' ? (
-							<Moment globalLocale="th" format="DD/MM/YYYY">
-								{item.PlanStartDate}
-							</Moment>
+							formatDate(item.PlanStartDate)
 						) : (
+							// <Moment globalLocale="th" format="DD/MM/YYYY">
+							// 	{item.PlanStartDate}
+							// </Moment>
 							<Box fontWeight="fontWeightLight"> </Box>
 						)}
 						{' - '}
 						{item.PlanEndDate.toString() != '1900-01-01T00:00:00' ? (
-							<Moment format="DD/MM/YYYY">{item.PlanEndDate}</Moment>
+							formatDate(item.PlanEndDate)
 						) : (
-							<Box fontWeight="fontWeightLight"> &nbsp;&nbsp;&nbsp;&nbsp;</Box>
+							// <Moment format="DD/MM/YYYY">{item.PlanEndDate}</Moment>
+							<Box fontWeight="fontWeightLight"></Box>
 						)}
 					</Box>
 				</Typography>
 			),
 		},
-		
+
 		{
 			title: 'Operation',
 			field: 'OperName',
@@ -363,8 +556,9 @@ function Line() {
 				size="small"
 				icons={tableIcons}
 				columns={columns}
-				data={data}
+				data={data.LoadData}
 				actions={actions}
+				isLoading={data.showLoading}
 				options={{
 					search: true,
 					//grouping: true

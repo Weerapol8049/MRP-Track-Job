@@ -29,7 +29,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import { green } from '@material-ui/core/colors';
 import axios from 'axios';
-import { API_URL } from '../../Constants';
+import { API_URL, LOGIN_USERNAME, LOGIN_PASSWORD  } from '../../Constants';
 
 import Modal from '@material-ui/core/Modal';
 import Backdrop from '@material-ui/core/Backdrop';
@@ -84,9 +84,11 @@ const useStyles = makeStyles((theme) => ({
 	modal: {
 		justifyContent: 'center',
 		display: 'flex',
+		
 		flexDirection: 'column',
 		margin: 'auto',
 		width: 'fit-content',
+		
 	},
 	paper: {
 		backgroundColor: theme.palette.background.paper,
@@ -94,6 +96,7 @@ const useStyles = makeStyles((theme) => ({
 		boxShadow: theme.shadows[5],
 		padding: '3%',
 	},
+
 }));
 
 function Line() {
@@ -104,14 +107,17 @@ function Line() {
 	const [data, setData] = useState([]);
 
 	useEffect(() => {
-		API('data');
+		let user = localStorage.getItem(LOGIN_USERNAME);
+		let pwd = localStorage.getItem(LOGIN_PASSWORD);
+
+		API('data', user, pwd);
 	}, []);
 
-	const API = (path) => {
+	const API = (path, username, password) => {
 		setData({ showLoading: true });
 		if (path == 'data') {
 			axios
-				.get(API_URL + '/' + path)
+				.get(API_URL + '/' + path + '/' + username + '/' + password)
 				.then((response) => {
 					setData({ LoadData: response.data, showLoading: false });
 				})
@@ -150,7 +156,10 @@ function Line() {
 	}
 
 	function refreshPage() {
-		API('data');
+		let user = localStorage.getItem(LOGIN_USERNAME);
+		let pwd = localStorage.getItem(LOGIN_PASSWORD);
+
+		API('data', user, pwd);
 	}
 
 	const handleClickOpen = (rowData, name) => {
@@ -177,8 +186,8 @@ function Line() {
 	const showDialog = () => {
 		return (
 			<Modal
-				// aria-labelledby="transition-modal-title"
-				// aria-describedby="transition-modal-description"
+				aria-labelledby="transition-modal-title"
+				aria-describedby="transition-modal-description"
 				className={classes.modal}
 				open={open}
 				onClose={handleClose}
@@ -193,16 +202,16 @@ function Line() {
 						<CardHeader title={'ยืนยัน' + rowData.Action + 'งาน'} subheader={formatDate(Date())} />
 						<CardContent>
 							<Grid container justify="space-around">
-								<Grid item md={7} xs={12}>
+								<Grid item md={12} xs={12}>
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightRegular" fontSize={16}>
 											{rowData.UserName + ' (' + rowData.UserId + ')'}
 										</Box>
 									</Typography>
 								</Grid>
-								<Grid item md={5} xs={12}>
+								<Grid item md={12} xs={12}>
 									<Typography className={classes.txt}>
-										<Box fontWeight="fontWeightLight" fontSize={14} textAlign="right">
+										<Box fontWeight="fontWeightLight" fontSize={14} textAlign="left">
 											{rowData.PlanStartDate != '1900-01-01T00:00:00' ? (
 												formatDate(rowData.PlanStartDate)
 											) : (
@@ -224,7 +233,7 @@ function Line() {
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightRegular">
 											{'Project : '}
-											<Box fontWeight="fontWeightLight" fontSize={18}>
+											<Box fontWeight="fontWeightLight"  fontSize={18}>
 												{rowData.ProjName}
 											</Box>
 										</Box>
@@ -233,14 +242,14 @@ function Line() {
 							</Grid>
 							<br></br>
 							<Grid container justify="space-around">
-								<Grid item md={3} xs={12}>
+								<Grid item md={5} xs={5}>
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightLight" fontSize={16}>
 											{'Type design : '}
 										</Box>
 									</Typography>
 								</Grid>
-								<Grid item md={9} xs={12}>
+								<Grid item md={7} xs={7}>
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightLight" fontSize={16}>
 											<Box fontWeight="fontWeightRegular">{rowData.TypeDesign} </Box>
@@ -249,14 +258,14 @@ function Line() {
 								</Grid>
 							</Grid>
 							<Grid container justify="space-around">
-								<Grid item md={3} xs={12}>
+								<Grid item md={5} xs={5}>
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightLight" fontSize={16}>
 											{'Side design : '}
 										</Box>
 									</Typography>
 								</Grid>
-								<Grid item md={9} xs={12}>
+								<Grid item md={7} xs={7}>
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightRegular" fontSize={16}>
 											{rowData.SideDesign}
@@ -265,14 +274,14 @@ function Line() {
 								</Grid>
 							</Grid>
 							<Grid container justify="space-around">
-								<Grid item md={3} xs={12}>
+								<Grid item md={5} xs={5}>
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightLight" fontSize={16}>
 											{'Operation : '}
 										</Box>
 									</Typography>
 								</Grid>
-								<Grid item md={9} xs={12}>
+								<Grid item md={7} xs={7}>
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightRegular" fontSize={16}>
 											{'(' + rowData.OperNo + ') ' + rowData.OperName}
@@ -281,14 +290,14 @@ function Line() {
 								</Grid>
 							</Grid>
 							<Grid container justify="space-around">
-								<Grid item md={3} xs={12}>
+								<Grid item md={3} xs={3}>
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightLight" fontSize={16}>
 											{'Remark : '}
 										</Box>
 									</Typography>
 								</Grid>
-								<Grid item md={9} xs={12}>
+								<Grid item md={9} xs={9}>
 									<Typography variant="body2" color="textPrimary" component="p">
 										<Box fontWeight="fontWeightRegular" fontSize={16}>
 											{rowData.Remark}

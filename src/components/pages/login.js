@@ -7,6 +7,11 @@ import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
 import { useDispatch, useSelector } from 'react-redux';
 import Alert from '@material-ui/lab/Alert';
+import axios from 'axios';
+import { API_LOGIN_URL, LOGIN_STATUS, LOGIN_USERNAME, LOGIN_PASSWORD } from '../../Constants';
+import { BrowserRouter as Router, Route, Redirect, Switch } from 'react-router-dom';
+import Box from '@material-ui/core/Box';
+import CardMedia from '@material-ui/core/CardMedia';
 import {
 	Grid,
 	Button,
@@ -20,80 +25,48 @@ import {
 	OutlinedInput,
 	InputAdornment,
 } from '@material-ui/core';
-//import * as loginActions from "./../../actions/login.action";
-
-const schema = {
-	email: {
-		presence: { allowEmpty: false, message: 'is required' },
-		email: true,
-		length: {
-			maximum: 64,
-		},
-	},
-	password: {
-		presence: { allowEmpty: false, message: 'is required' },
-		length: {
-			maximum: 128,
-		},
-	},
-};
 
 const useStyles = makeStyles((theme) => ({
 	root: {
 		justifyContent: 'center',
 		display: 'flex',
-		marginTop: theme.spacing(20),
-		marginLeft: theme.spacing(50),
-		marginRight: theme.spacing(50),
+		alignItems: 'center',
+		paddingTop: '7%',
+		paddingLeft: '5%',
+		paddingRight: '5%',
+		paddingBottom: '7%',
+		//backgroundColor: "#D6EAF8",
 	},
 	grid: {
+		paddingTop: '7%',
+		paddingLeft: '3%',
+		paddingRight: '3%',
+		paddingBottom: '7%',
+		justifyContent: 'center',
+		display: 'flex',
 		backgroundColor: '#EAEDED',
 		height: '100%',
 	},
-
 	name: {
-		marginTop: theme.spacing(3),
+		marginTop: '3%',
 		color: theme.palette.white,
 	},
-
-	contentContainer: {},
 	content: {
 		height: '100%',
 		display: 'flex',
 		flexDirection: 'column',
 	},
-	contentHeader: {
-		display: 'flex',
-		alignItems: 'center',
-		paddingTop: theme.spacing(5),
-		paddingBototm: theme.spacing(2),
-		paddingLeft: theme.spacing(2),
-		paddingRight: theme.spacing(2),
-	},
-
 	contentBody: {
 		//flexGrow: 1,
 		//display: "flex",
 		alignItems: 'center',
 	},
 	form: {
-		margin: theme.spacing(5, 10),
+		margin: '5%',
 		justifyContent: 'center',
 	},
 	title: {
-		marginTop: theme.spacing(3),
-	},
-	socialButtons: {
-		marginTop: theme.spacing(3),
-	},
-	socialIcon: {
-		marginRight: theme.spacing(1),
-	},
-	sugestion: {
-		marginTop: theme.spacing(2),
-	},
-	margin: {
-		margin: theme.spacing(2, 0),
+		marginTop: '3%',
 	},
 	textField: {
 		backgroundColor: '#FBFCFC',
@@ -101,7 +74,7 @@ const useStyles = makeStyles((theme) => ({
 	},
 	formField: {
 		backgroundColor: '#FBFCFC',
-		margin: theme.spacing(2, 0),
+		margin: '2%',
 	},
 	signInButton: {
 		margin: theme.spacing(2, 0),
@@ -112,16 +85,36 @@ const SignIn = (props) => {
 	const { history } = props;
 
 	const classes = useStyles();
-	// const dispatch = useDispatch();
-	// const loginReducer = useSelector(({ loginReducer }) => loginReducer);
-
-	const [values, setValues] = React.useState({
-		username: 'admin',
-		password: 'admin123',
+	const [login, setLogin] = useState('');
+	const [values, setValues] = useState({
+		username: '',
+		password: '',
 		weight: '',
 		weightRange: '',
 		showPassword: false,
 	});
+
+	const API = (path) => {
+		const parm = {
+			UserName: values.username,
+			Password: values.password,
+		};
+
+		axios.post(API_LOGIN_URL + '/' + path, parm).then((response) => {
+			if (response.data == 'NOK') {
+				localStorage.setItem(LOGIN_STATUS, 'NOK');
+				setLogin({ status: 'NOK', error: 'Username or Password incorrect.' });
+				console.log(response.data);
+			} else {
+				setLogin({ status: 'OK' });
+				localStorage.setItem(LOGIN_STATUS, 'OK');
+				localStorage.setItem(LOGIN_USERNAME, values.username);
+				localStorage.setItem(LOGIN_PASSWORD, values.password);
+				console.log('Success ' + values.username + ' - ' + values.password);
+				window.location = '/MRPTrack';
+			}
+		});
+	};
 
 	const handleBack = () => {
 		history.goBack();
@@ -147,19 +140,23 @@ const SignIn = (props) => {
 		<div className={classes.root}>
 			<Card className={classes.grid} container>
 				<Grid className={classes.content} item lg={12} xs={12}>
+					<Grid item lg={12} xs={12}>
+						<img width="200" alt="Logo" src="/images/LOGO_STARMARK.png" />
+					</Grid>
 					<div className={classes.contentBody}>
 						<form
 							className={classes.form}
 							onSubmit={(e) => {
 								e.preventDefault();
-								//dispatch(loginActions.login({ ...values, ...props }));
+								API('user');
 							}}
 						>
-							<Typography className={classes.title} variant="h4">
-								ลงชื่อเข้าใช้งาน
+							<Typography variant="body2" color="textPrimary" component="p">
+								<Box fontWeight="fontWeightRegular" fontSize={20}>
+									{'ลงชื่อเข้าใช้งาน'}
+								</Box>
 							</Typography>
 
-							<Grid className={classes.socialButtons} container spacing={2}></Grid>
 							<Grid container justify="space-around">
 								<Grid item md={12} xs={12}>
 									<TextField
@@ -211,9 +208,7 @@ const SignIn = (props) => {
 								</Grid>
 							</Grid>
 
-							{/* {loginReducer.error && (
-                <Alert severity="error">{loginReducer.result}</Alert>
-              )} */}
+							{login.status == 'NOK' && <Alert severity="error">{login.error}</Alert>}
 
 							<Button
 								className={classes.signInButton}

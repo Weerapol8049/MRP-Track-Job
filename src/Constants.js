@@ -10,11 +10,18 @@ export const TRACK_BU_FETCHING = "TRACK_BU_FETCHING";
 export const TRACK_BU_SUCCESS = "TRACK_BU_SUCCESS";
 export const TRACK_BU_FAILED = "TRACK_BU_FAILED";
 
+export const LOGIN_STATUS = "LOGIN_STATUS";
+export const LOGIN_USERNAME = "LOGIN_USERNAME";
+export const LOGIN_PASSWORD = "LOGIN_PASSWORD";
+
 export const apiUrl = "http://localhost:8085/api/v2";
 //export const apiUrl = "http://starmark.work/";
 
 export const API_URL = "http://starmark.work/axtrackjobservice/api/trackjobline";
 //export const API_URL = "http://localhost:5413/api/trackjobline";
+export const API_LOGIN_URL = "http://starmark.work/axtrackjobservice/api/login";
+//export const API_LOGIN_URL = "http://localhost:5413/api/login";
+
 export const server = {
     LOGIN_URL: `authen/login`,
     REGISTER_URL: `authen/register`,
@@ -25,4 +32,4 @@ export const server = {
 
   export const NOT_CONNECT_NETWORK = "NOT_CONNECT_NETWORK";
   export const NETWORK_CONNECTION_MESSAGE =
-  "Cannot connect to server, Please try again.";
+  "Cannot connect to server, Please try again."; 

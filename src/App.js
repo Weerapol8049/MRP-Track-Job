@@ -7,6 +7,7 @@ import Header from './components/flagments/header';
 import Login from './components/pages/login';
 import ReceiveEnd from './components/pages/receive_end_job';
 import { BrowserRouter as Router, Route, Redirect, Switch } from 'react-router-dom';
+import { LOGIN_STATUS  } from '../src/Constants';
 
 const theme = createMuiTheme({
 	typography: {
@@ -14,16 +15,54 @@ const theme = createMuiTheme({
 	},
 });
 
-function App() {
+function App() { 
+	const [login, setLogin] = React.useState(0);
+
+	React.useEffect(() => {
+		
+		const loginStatus = localStorage.getItem(LOGIN_STATUS);
+		console.log('Login status : ' +loginStatus);
+		setLogin({ status : loginStatus });
+	  }, []);
+
+	  const LoginRoute = ({ component: Component, ...rest }) => (
+		<Route
+		  {...rest}
+		  render={(props) =>
+			// ternary condition
+			login.status ? <Redirect to="/MRPTrack" /> : <Login {...props} />
+		  }
+		/>
+	  );
+	
+	  // Protected Route
+	const SecuredRoute = ({ component: Component, ...rest }) => (
+		<Route
+		  {...rest}
+		  render={(props) =>
+			// ternary condition
+			login.status  ? (
+			  <Component {...props} />
+			) : (
+			  <Redirect to="/Login" />
+			)
+		  }
+		/>
+	  );
+	  
+	  const redirectToLogin = () => {
+		return <Redirect to="/Login"></Redirect>;
+	  };
+	  
 	return (
 		<Router>
-			{/* <Header></Header> */}
+			{login.status && <Header></Header>}
 			<Switch>
 				<ThemeProvider theme={theme}>
 					<div className="App">
-					    {/* <Route path="/Login" component={Login}></Route> */}
-						<Route path="/MRPTrack" component={ReceiveEnd}></Route>
-						<Route exact={true} path="/" component={ReceiveEnd}></Route>
+					    <LoginRoute path="/Login" component={Login}></LoginRoute>
+						<SecuredRoute path="/MRPTrack" component={ReceiveEnd}></SecuredRoute>
+						<Route exact={true} path="/" component={redirectToLogin}></Route>
 					</div>
 				</ThemeProvider>
 			</Switch>

@@ -17,6 +17,8 @@ import { Link as RouterLink } from 'react-router-dom';
 //import * as loginActions from './../../actions/login.action';
 import { withRouter } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { API_URL, LOGIN_STATUS, LOGIN_USERNAME, LOGIN_PASSWORD } from '../../Constants';
+import { BrowserRouter as Router, Route, Redirect, Switch } from 'react-router-dom';
 const useStyles = makeStyles((theme) => ({
 	root: {
 		flexGrow: 1,
@@ -69,6 +71,13 @@ const Header = (props) => {
 		setUser(username);
 	}, []);
 
+	const handleClickLogout = () => {
+		localStorage.removeItem(LOGIN_STATUS);
+		localStorage.removeItem(LOGIN_USERNAME);
+		localStorage.removeItem(LOGIN_PASSWORD);
+		window.location = '/Login';
+	};
+
 	const handleClick = (event) => {
 		setAnchorEl(event.currentTarget);
 	};
@@ -80,7 +89,7 @@ const Header = (props) => {
 	return (
 		<div>
 			<div className={classes.root}>
-				<AppBar style={{ backgroundColor: '#3f51b5' }} position="static">
+				<AppBar style={{ backgroundColor: '#3498DB' }} position="static">
 					<Toolbar>
 						<RouterLink to="/main">
 							<img width="200" alt="Logo" src="/images/LOGO_STARMARK.png" />
@@ -91,9 +100,18 @@ const Header = (props) => {
 
 						<p style={{ marginLeft: 10, marginRight: 10 }}>{user}</p>
 
-						<IconButton aria-label="delete" className={classes.margin} size="small" onClick={handleClick}>
-							<ExpandMoreIcon fontSize="small" />
+						<IconButton
+							aria-label="delete"
+							className={classes.margin}
+							size="small"
+							onClick={handleClickLogout}
+						>
+							<PowerSettingsNewIcon color="secondary" fontSize="small" />
 						</IconButton>
+
+						{/* <IconButton aria-label="delete" className={classes.margin} size="small" onClick={handleClick}>
+							<ExpandMoreIcon fontSize="small" />
+						</IconButton> */}
 						<StyledMenu
 							id="customized-menu"
 							anchorEl={anchorEl}
@@ -105,9 +123,12 @@ const Header = (props) => {
 								<ListItemIcon>
 									<PowerSettingsNewIcon color="secondary" fontSize="small" />
 								</ListItemIcon>
-								<ListItemText 
+								<ListItemText
 									onClick={() => {
-										//dispatch(loginActions.logout({ ...props }));
+										localStorage.removeItem(LOGIN_STATUS);
+										localStorage.removeItem(LOGIN_USERNAME);
+										localStorage.removeItem(LOGIN_PASSWORD);
+										window.location = '/Login';
 									}}
 									primary="ออกจากระบบ"
 								/>

@@ -19,9 +19,7 @@ function App() {
 	const [login, setLogin] = React.useState(0);
 
 	React.useEffect(() => {
-		
 		const loginStatus = localStorage.getItem(LOGIN_STATUS);
-		console.log('Login status : ' +loginStatus);
 		setLogin({ status : loginStatus });
 	  }, []);
 

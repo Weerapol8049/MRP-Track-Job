@@ -35,7 +35,6 @@ const useStyles = makeStyles((theme) => ({
 		paddingLeft: '5%',
 		paddingRight: '5%',
 		paddingBottom: '7%',
-		//backgroundColor: "#D6EAF8",
 	},
 	grid: {
 		paddingTop: '7%',
@@ -178,7 +177,7 @@ const SignIn = (props) => {
 							</Grid>
 							<Grid container justify="space-around">
 								<Grid item md={12} xs={12}>
-									<FormControl className={classes.formField} variant="outlined">
+									<FormControl className={classes.textField} variant="outlined">
 										<InputLabel htmlFor="outlined-adornment-password">รหัสผ่าน</InputLabel>
 										<OutlinedInput
 											id="outlined-adornment-password"

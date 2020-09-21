@@ -1,23 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Link as RouterLink, withRouter } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import clsx from 'clsx';
 import { makeStyles } from '@material-ui/core/styles';
 import Visibility from '@material-ui/icons/Visibility';
 import VisibilityOff from '@material-ui/icons/VisibilityOff';
-import { useDispatch, useSelector } from 'react-redux';
 import Alert from '@material-ui/lab/Alert';
 import axios from 'axios';
-import { API_LOGIN_URL, LOGIN_STATUS, LOGIN_USERNAME, LOGIN_PASSWORD } from '../../Constants';
-import { BrowserRouter as Router, Route, Redirect, Switch } from 'react-router-dom';
+import { API_LOGIN_URL, LOGIN_STATUS, LOGIN_NAME, LOGIN_USERNAME, LOGIN_PASSWORD } from '../../Constants';
 import Box from '@material-ui/core/Box';
-import CardMedia from '@material-ui/core/CardMedia';
+import clsx from 'clsx';
+import CircularProgress from '@material-ui/core/CircularProgress';
+
 import {
 	Grid,
 	Button,
 	IconButton,
 	TextField,
-	Link,
 	Card,
 	Typography,
 	FormControl,
@@ -78,6 +75,18 @@ const useStyles = makeStyles((theme) => ({
 	signInButton: {
 		margin: theme.spacing(2, 0),
 	},
+	buttonProgress: {
+		//color: green[500],
+		position: 'absolute',
+		top: '50%',
+		left: '50%',
+		marginTop: -12,
+		marginLeft: -12,
+	},
+	wrapper: {
+		margin: theme.spacing(1),
+		position: 'relative',
+	},
 }));
 
 const SignIn = (props) => {
@@ -85,6 +94,9 @@ const SignIn = (props) => {
 
 	const classes = useStyles();
 	const [login, setLogin] = useState('');
+	const [loading, setLoading] = React.useState(false);
+	const [success, setSuccess] = React.useState(false);
+
 	const [values, setValues] = useState({
 		username: '',
 		password: '',
@@ -93,46 +105,54 @@ const SignIn = (props) => {
 		showPassword: false,
 	});
 
+	const buttonClassname = clsx({
+		[classes.buttonSuccess]: success,
+	});
+
 	const API = (path) => {
-		const parm = {
-			UserName: values.username,
-			Password: values.password,
-		};
+		if (!loading) {
+			setSuccess(false);
+			setLoading(true);
 
-		axios.post(API_LOGIN_URL + '/' + path, parm).then((response) => {
-			if (response.data == 'NOK') {
-				localStorage.setItem(LOGIN_STATUS, 'NOK');
-				setLogin({ status: 'NOK', error: 'Username or Password incorrect.' });
-				console.log(response.data);
-			} else {
-				setLogin({ status: 'OK' });
-				localStorage.setItem(LOGIN_STATUS, 'OK');
-				localStorage.setItem(LOGIN_USERNAME, values.username);
-				localStorage.setItem(LOGIN_PASSWORD, values.password);
-				console.log('Success ' + values.username + ' - ' + values.password);
-				window.location = '/MRPTrack';
-			}
-		});
+			const parm = {
+				UserName: values.username,
+				Password: values.password,
+			};
+
+			axios.post(API_LOGIN_URL + '/' + path, parm).then((response) => {
+				if (response.data == 'NOK') {
+					localStorage.setItem(LOGIN_STATUS, 'NOK');
+					setLogin({ status: 'NOK', error: 'ชื่อผู้ใช้ หรือ รหัสผ่านไม่ถูกต้อง' });
+					setSuccess(true);
+					setLoading(false);
+				} else {
+					setLogin({ status: 'OK' });
+					localStorage.setItem(LOGIN_STATUS, 'OK');
+
+					const name = response.data.map((element) => {
+						return { element };
+					});
+
+					for (const [index, value] of name.entries()) {
+						localStorage.setItem(LOGIN_NAME, value.element.Name);
+						localStorage.setItem(LOGIN_USERNAME, value.element.UserName);
+						localStorage.setItem(LOGIN_PASSWORD, value.element.Password);
+					}
+					//console.log('Success ' + values.username + ' - ' + localStorage.getItem("LOGIN_NAME"));
+					window.location = '/MRPTrack';
+					setSuccess(true);
+					setLoading(false);
+				}
+			});
+		}
 	};
 
-	const handleBack = () => {
-		history.goBack();
-	};
-
-	const handleChange = (prop) => (event) => {
-		setValues({ ...values, [prop]: event.target.value });
-	};
 	const handleClickShowPassword = () => {
 		setValues({ ...values, showPassword: !values.showPassword });
 	};
 
 	const handleMouseDownPassword = (event) => {
 		event.preventDefault();
-	};
-
-	const handleSignIn = (event) => {
-		event.preventDefault();
-		history.push('/');
 	};
 
 	return (
@@ -208,17 +228,21 @@ const SignIn = (props) => {
 							</Grid>
 
 							{login.status == 'NOK' && <Alert severity="error">{login.error}</Alert>}
-
-							<Button
-								className={classes.signInButton}
-								color="primary"
-								fullWidth
-								size="large"
-								type="submit"
-								variant="contained"
-							>
-								เข้าสู่ระบบ
-							</Button>
+							<div className={classes.wrapper}>
+								<Button
+									className={buttonClassname}
+									color="primary"
+									fullWidth
+									size="large"
+									type="submit"
+									variant="contained"
+									disabled={loading}
+									//onClick={handleButtonClick}
+								>
+									เข้าสู่ระบบ
+								</Button>
+								{loading && <CircularProgress size={24} className={classes.buttonProgress} />}
+							</div>
 						</form>
 					</div>
 				</Grid>

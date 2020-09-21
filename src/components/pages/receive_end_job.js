@@ -116,14 +116,23 @@ function Line() {
 	const API = (path, username, password) => {
 		setData({ showLoading: true });
 		if (path == 'data') {
+			const parm = { UserName : username, Password : password};
 			axios
-				.get(API_URL + '/' + path + '/' + username + '/' + password)
+				.post(API_URL + '/' + path, parm )
 				.then((response) => {
 					setData({ LoadData: response.data, showLoading: false });
 				})
 				.catch((error) => {
 					console.log(error);
 				});
+			// axios
+			// 	.get(API_URL + '/' + path + '/' + username + '/' + password)
+			// 	.then((response) => {
+			// 		setData({ LoadData: response.data, showLoading: false });
+			// 	})
+			// 	.catch((error) => {
+			// 		console.log(error);
+			// 	});
 		} else if (path == 'edit') {
 			const parm = {
 				RecId: rowData.RecId,
@@ -343,50 +352,7 @@ function Line() {
 					</Card>
 				</Fade>
 			</Modal>
-			// <Dialog
-			// 	open={open}
-			// 	onClose={handleClose}
-			// 	aria-labelledby="alert-dialog-title"
-			// 	aria-describedby="alert-dialog-description"
-			// >
-			// 	<DialogTitle id="alert-dialog-title">{rowData.Action + ' job'}</DialogTitle>
-			// 	<DialogContent>
-			// 		<DialogContentText id="alert-dialog-description">
-			// 			{'Are you sure you want to ' + rowData.Action + ' this job?'}
-			// 		</DialogContentText>
-			// 		<Formik
-			// 			initialValues={{
-			// 				id: 0,
-			// 			}}
-			// 			onSubmit={(values, { setSubmitting }) => {
-			// 				setSubmitting(false);
-			// 			}}
-			// 		>
-			// 			{(props) => {
-			// 				const { handleSubmit, isSubmitting } = props;
-
-			// 				return (
-			// 					<Form onSubmit={handleSubmit}>
-			// 						<DialogActions>
-			// 							<Button
-			// 								disabled={isSubmitting}
-			// 								onClick={handleOK}
-			// 								type="submit"
-			// 								color="primary"
-			// 								variant="contained"
-			// 							>
-			// 								OK
-			// 							</Button>
-			// 							<Button onClick={handleClose} color="primary" autoFocus>
-			// 								Cancel
-			// 							</Button>
-			// 						</DialogActions>
-			// 					</Form>
-			// 				);
-			// 			}}
-			// 		</Formik>
-			// 	</DialogContent>
-			// </Dialog>
+			
 		);
 	};
 
